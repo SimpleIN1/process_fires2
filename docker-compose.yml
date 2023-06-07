@@ -1,0 +1,100 @@
+version: "3"
+
+
+services:
+  process_event_pq:
+    build:
+      context: .
+      dockerfile: process_event_pq/Dockerfile
+    restart: always
+    command: bash -c "./process_fire/process_event_pq/startup.sh"
+#    links:
+#      - postgres
+#    depends_on:
+##      - loader_data
+#      - postgres
+    env_file:
+      .env
+    environment:
+      db_name: "${db_name}"
+      db_user: "${db_user}"
+      db_password: "${db_password}"
+      db_port: "${db_port}"
+      db_host: "postgres" #"${db_host}"
+      db_listen_event: "${db_listen_event}"
+    networks:
+      - default
+  files_tracker:
+    build:
+      context: .
+      dockerfile: files_tracker/Dockerfile
+    restart: always
+    command: bash -c "./process_fire/files_tracker/startup.sh"
+    volumes:
+      - ./monitor_dir/:/home/py-user/monitor_dir
+    depends_on:
+      - process_event_pq
+    env_file:
+      - .env
+    environment:
+      db_name: "${db_name}"
+      db_user: "${db_user}"
+      db_password: "${db_password}"
+      db_port: "${db_port}"
+      db_host: "postgres" #"${db_host}"
+    networks:
+      - default
+
+  ftp_tracker:
+    build:
+      context: .
+      dockerfile: ftp_tracker/Dockerfile
+    restart: always
+    command: bash -c "./process_fire/ftp_tracker/startup.sh"
+    volumes:
+      - ./monitor_dir/:/home/py-user/monitor_dir
+    depends_on:
+      - files_tracker
+    env_file:
+      - .env
+    environment:
+      db_name: "${db_name}"
+      db_user: "${db_user}"
+      db_password: "${db_password}"
+      db_port: "${db_port}"
+      db_host: "postgres" #"${db_host}"
+
+      ftp_server: "${ftp_server}"
+      ftp_login: "${ftp_login}"
+      ftp_password: "$ftp_password"
+    networks:
+      - default
+
+networks:
+  default:
+      external: true
+      name: loader_data_default
+
+#  postres12:
+#    image: postgis/postgis
+#    restart: unless-stopped
+#    volumes:
+#      - postgres_db_volume:/var/lib/postgresql/data/
+#    ports:
+#      - "5432:5432"
+#    env_file:
+#      - .env
+#    environment:
+#      PGDATA: /var/lib/postgresql/data/
+##      POSTGRES_DB: "${db_name}"
+##      POSTGRES_USER: "${db_user}"
+##      POSTGRES_PASSWORD: "${db_password}"
+#
+##volumes:
+##  postgres_db_volume:
+#
+#
+#volumes:
+#    postgres-db-volume:
+#        external: true
+#        name: pg-data-test

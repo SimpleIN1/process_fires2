@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.idea
+
+loader_data/data
+loader_data/load_poly_settlement
+
+.env
+*/trash*.txt
+ftp_tracker/ftp
+ftp_tracker/monitor_dir
+
+triggers.txt
+**/logs
+appended_module.py

@@ -1,0 +1,12 @@
+**/__pycache__
+*.py[cod]
+.idea
+
+loader_data/data
+loader_data/*.json
+loader_data/data.7z
+
+.env
+
+*/trash*.txt
+**/logs
