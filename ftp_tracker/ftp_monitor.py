@@ -4,6 +4,7 @@ import time
 from ftplib import FTP, error_perm
 import datetime
 from threading import Thread
+import pytz
 
 from process_fire.base.log import Log, error_wraps
 
@@ -51,6 +52,7 @@ class FtpTracker(SettingClient, ManageFile):
     __date_format = '%m-%d-%y'
     __path_to_filenames_cur_day = 'data/filenames_cur_day.txt'
     __expansion_list = ('dbf', 'shx', 'prj', 'shp')
+    __tz = pytz.timezone('Asia/Novosibirsk')
 
     def __init__(
         self,
@@ -75,11 +77,12 @@ class FtpTracker(SettingClient, ManageFile):
                 print(2424)
                 break
             except TimeoutError:
-                print(1212)
+                print('->||Timeout error. Connection dropped.||<-')
                 continue
-
+        print(111)
         self.ftp.login(self.login, self.password)
         self.ftp.cwd(tracker_remote_dir)
+        print(111)
         self.tracker_dir = tracker_remote_dir
         # self.output_dir = output_dir
         # self.path_to_filenames = path_to_filenames
@@ -103,10 +106,10 @@ class FtpTracker(SettingClient, ManageFile):
             self.write_filenames_to_file([], self.__path_to_filenames_cur_day, mode='w')
 
         ls = set()
-        date = datetime.datetime.now().strftime(self.__date_format)
+        date = datetime.datetime.now(self.__tz).strftime(self.__date_format)
 
         while True:
-            date_now = datetime.datetime.now().strftime(self.__date_format)
+            date_now = datetime.datetime.now(self.__tz).strftime(self.__date_format)
 
             if date < date_now:
                 self.write_filenames_to_file(ls_prev, self.path_to_filenames)
@@ -120,18 +123,18 @@ class FtpTracker(SettingClient, ManageFile):
             else:
                 ls.clear()
                 self._fetch_files_from_ftp(remote_dir, ls.update)
-
+                #print('ls -- ', ls)
             add = ls-ls_prev
-
+            #print('add -- ', add)
             if add:
                 print(add)
                 # self.write_filenames_to_file(add, self.__path_to_filenames_cur_day)
                 yield add
             ls_prev = ls
+            #print('--', ls_prev)
+            time.sleep(8)
 
-            time.sleep(2)
-
-    @error_wraps
+    #@error_wraps
     def download_file_retrbinary(self, file: str, to: str):
         return self.ftp.retrbinary('RETR ' + file, open(to, 'wb').write)
 
@@ -150,6 +153,7 @@ class FtpTracker(SettingClient, ManageFile):
                 download_files.update,
                 datetime.datetime.now().strftime(self.__date_format)
             )
+            #time.sleep(2)
 
         files = download_files-filenames
 
@@ -172,6 +176,7 @@ class FtpTracker(SettingClient, ManageFile):
                     f'{self.ftp.pwd()}/{file}.{expansion}',
                     f'{self.output_dir}/{os.path.basename(file)}.{expansion}'
                 )
+                #time.sleep(1)
             added_files.append(file)
         return added_files
 
@@ -192,8 +197,8 @@ class FtpTracker(SettingClient, ManageFile):
 
         remote_files = []
         self.ftp.retrlines(f'LIST {remote_dir}/*.shp', remote_files.append)
-
-        for file_item in remote_files[:100]:
+        
+        for file_item in remote_files:
             file_metadata = list(
                 filter(
                     lambda item: item != '',
@@ -209,7 +214,7 @@ class FtpTracker(SettingClient, ManageFile):
                 if file_metadata[0] < formatted_date:
                     file_names.append(f'{remote_dir}/{filename}')
             else:
-                date_now = datetime.datetime.now().strftime(self.__date_format)
+                date_now = datetime.datetime.now(self.__tz).strftime(self.__date_format)
                 if file_metadata[0] == date_now:
                     # print(date_now, filename)
                     # print(file_metadata)

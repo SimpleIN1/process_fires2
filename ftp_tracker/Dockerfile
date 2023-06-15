@@ -5,6 +5,9 @@ ENV PYTHONUNBUFFERED 1
 
 RUN useradd -m -s /bin/bash py-user
 
+RUN mkdir -p /home/py-user/mondir
+RUN chmod ugo+rwx -R /home/py-user/mondir
+
 USER py-user
 WORKDIR /home/py-user/
 
@@ -18,5 +21,4 @@ COPY --chown=py-user ../ftp_tracker/. /home/py-user/process_fire/ftp_tracker/
 COPY ../base /home/py-user/process_fire/base
 COPY ../config.py /home/py-user/process_fire/
 
-RUN mkdir -p /home/py-user/mondir
 RUN chmod u+x ./process_fire/ftp_tracker/startup.sh

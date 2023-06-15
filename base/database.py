@@ -118,7 +118,7 @@ class DataBase(FuncSqlRow):
         query = self.session.query(Subject).all()
         return query
 
-    @time_of_work_wraps
+    #@time_of_work_wraps
     def insert_settlements(self, id_fire_value, list_settlement):
         try:
             self.session.add_all(
@@ -132,7 +132,7 @@ class DataBase(FuncSqlRow):
     def get_fire_value_by_id(self, id):
         return self.session.query(FireValue).filter(FireValue.id == id).first()
 
-    @time_of_work_wraps
+    #@time_of_work_wraps
     def update_fire_value(self, id_fire_value, tech, min_distance, id_min_stln, district_id, directly):
         try:
             fire_value = self.get_fire_value_by_id(id_fire_value)
@@ -203,11 +203,11 @@ class DataBase(FuncSqlRow):
 
         dt = self.get_or_create(model=DateTm, datetime=date_time)
         # if not dt
-
+        attribute_name = data_fires.fields[3][0] 
         l_s = [FireValue(
-            temperature=row['properties'][self.fetch_key_temperature(data_fires.schema)], #['temperatur'],
-            latitude=shape(row['geometry']).y,
-            longitude=shape(row['geometry']).x,
+            temperature=row.record[attribute_name],#[self.fetch_key_temperature(data_fires.schema)], #['temperatur'],
+            latitude=shape(row.shape).y,
+            longitude=shape(row.shape).x,
             datetime_id=dt.id,
             satellite=kwargs.get('satellite'),
             round=kwargs.get('round'),

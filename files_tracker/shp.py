@@ -2,7 +2,7 @@ from datetime import datetime
 
 import fiona
 import os
-
+import shapefile
 from process_fire.base.log import error_wraps
 
 
@@ -12,8 +12,18 @@ class ShapeFile:
 
     @error_wraps
     def read_shape_file(self):
-        data = fiona.open(self.filename)
-        # print(data.schema)
+        #data = fiona.open(self.filename)
+        # print(data.schema)a
+        filename = os.path.basename(self.filename).split('.')[0] 
+        dirname = os.path.dirname(self.filename)
+        #print(f'===={dirname}/{filename}.shp')
+        data = shapefile.Reader(
+            dbf=f'{dirname}/{filename}.dbf',
+            shp=f'{dirname}/{filename}.shp',
+        )
+        #for item in data:
+        #    print(item.record)
+        #print(data)
         return data
 
     @classmethod

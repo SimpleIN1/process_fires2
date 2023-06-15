@@ -1,7 +1,7 @@
-from process_fire import config
+import config
 #from . import config
-#from ftp_monitor_2_0 import TrackFTP
-from process_fire.ftp_tracker.ftp_monitor_2_0 import TrackFTP
+from ftp_tracker.ftp_monitor_2_0 import TrackFTP
+
 
 def main():
     ftp = TrackFTP(
@@ -12,8 +12,8 @@ def main():
         password=config.ftp_password,
         dir_data='data',
     )
-    #ftp.get_downloading_files()
-    ftp.run()
+    ftp.get_downloading_files()
+    #ftp.run()
     
 
 

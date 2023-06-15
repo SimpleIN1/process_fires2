@@ -59,7 +59,7 @@ class Psycopg2Notify:
             for notify in self.conn.notifies:
                 # print(notify.payload)
                 json_obj = json.loads(notify.payload)
-                print(json_obj)
+                #print(json_obj)
                 self.process_fire_point.run_process(
                     json_obj['id'],
                     json_obj['longitude'],

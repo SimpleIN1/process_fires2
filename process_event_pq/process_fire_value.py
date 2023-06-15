@@ -18,6 +18,7 @@ from process_fire.process_event_pq.calculating_distance import operate_distance
 class ProcessFirePoint:
 
     def __init__(self):
+        print('__init__ ProcessFirePoint')
         self.db = DataBase()
         self.db.create_tables()
         self.settlements_dict = {}
@@ -26,6 +27,7 @@ class ProcessFirePoint:
         self.settlements = self.fetch_settlements_data()
         self.subjects = self.fetch_subjects_data()
         self.districts = self.fetch_districts_data()
+        self.__count = 0
 
     def fetch_settlements_data(self):
         out_list = []
@@ -214,6 +216,7 @@ class ProcessFirePoint:
                     dict_settlement['id_settlement'] = key_id
 
                 if distance <= 5:
+                    distance = None
                     list_settlement_id_least_5.append(key_id)
 
         return \
@@ -274,7 +277,7 @@ class ProcessFirePoint:
         return directly_from_stlm
 
     # @time_of_work_wraps
-    @error_wraps
+    #@error_wraps
     def run_process(self, id_fire_value, longitude, latitude):
 
         tech = self.is_tech_zone(Point(longitude, latitude))
@@ -282,15 +285,20 @@ class ProcessFirePoint:
 
         if district_id and not tech: # correct not tech
             id_min_stln, min_distance, long, lat, list_id_settlement = self.operate_distance(Point(longitude, latitude))
-
-            self.db.insert_settlements(
-                id_fire_value=id_fire_value,
-                list_settlement=list_id_settlement
-            )
+            
+            
+            if list_id_settlement != []:
+                self.db.insert_settlements(
+                    id_fire_value=id_fire_value,
+                    list_settlement=list_id_settlement
+                )
 
             directly = self.calculate_directly(longitude, latitude, long, lat)
             self.db.update_fire_value(id_fire_value, tech, min_distance, id_min_stln, district_id, directly)
 
-            print('dis')
+            #print('dis')
         else:
             self.db.update_tech_zone(id_fire_value, tech)
+        self.__count+=1
+        if self.__count%1000==0:
+            print(f'->|->1000 fire values were processed ->|{id_fire_value}|<-')

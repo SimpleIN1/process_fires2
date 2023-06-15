@@ -31,7 +31,7 @@ services:
     restart: always
     command: bash -c "./process_fire/files_tracker/startup.sh"
     volumes:
-      - ./monitor_dir/:/home/py-user/monitor_dir
+      - ./mondir/:/home/py-user/mondir
     depends_on:
       - process_event_pq
     env_file:
@@ -52,7 +52,8 @@ services:
     restart: always
     command: bash -c "./process_fire/ftp_tracker/startup.sh"
     volumes:
-      - ./monitor_dir/:/home/py-user/monitor_dir
+      - ./mondir/:/home/py-user/mondir
+      - ./ftp_tracker/data/:/home/py-user/data/
     depends_on:
       - files_tracker
     env_file:

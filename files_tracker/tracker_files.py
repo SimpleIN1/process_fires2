@@ -17,21 +17,55 @@ from process_fire.files_tracker.shp import ShapeFile
 class FileHandler(FileSystemEventHandler):
     db = DataBase()
 
+    #def __check_files(self, path):
+    #    dirname = os.path.dirname(path)
+    #    filename = os.path.basename(path).split('.')[0]
+    #    print(os.path.exists(f'{dirname}/{filename}.dbf'))
+    #    print(os.path.exists(f'{dirname}/{filename}.shx'))
+    #    print(os.path.exists(f'{dirname}/{filename}.prj'))
+    #    print(os.path.exists(f'{dirname}/{filename}.shp'))
+
+    #def on_created(self, event):
+    #    path = event.src_path
+    #    # self.__check_files(path)
+    #    if fnmatch.fnmatch(path, '*.shp'):
+    #        print('File write increated %s' % path)
+    #        # self.__check_files(path)
+    #        FileTracker.add_fire_values(path, self.db)
+
+
+    __not_loading_files = []
+
     def __check_files(self, path):
         dirname = os.path.dirname(path)
         filename = os.path.basename(path).split('.')[0]
-        print(os.path.exists(f'{dirname}/{filename}.dbf'))
-        print(os.path.exists(f'{dirname}/{filename}.shx'))
-        print(os.path.exists(f'{dirname}/{filename}.prj'))
-        print(os.path.exists(f'{dirname}/{filename}.shp'))
+        for expansion in ('dbf', 'prj', 'shx', 'shp'):
+            if not os.path.exists(f'{dirname}/{filename}.{expansion}'):
+                return False
+        return True
+
+    def __write_not_inserted_file(self):    
+        if len(self.__not_loading_files) != 0:
+            print('Unsuccessfully -', self.__not_loading_files)
+            for index, file in enumerate(self.__not_loading_files):
+                if self.__check_files(file):
+                    FileTracker.add_fire_values(file, self.db)
+                    self.__not_loading_files.pop(index)
 
     def on_created(self, event):
         path = event.src_path
-        # self.__check_files(path)
         if fnmatch.fnmatch(path, '*.shp'):
             print('File write increated %s' % path)
-            # self.__check_files(path)
-            FileTracker.add_fire_values(path, self.db)
+
+            self.__write_not_inserted_file()
+
+            if self.__check_files(path):
+                #print(path, 'successfully')
+                FileTracker.add_fire_values(path, self.db)
+            else:
+                print('--', path)
+                self.__not_loading_files.append(path)
+
 
     def on_moved(self, event):
         print('Onmoved')
@@ -76,7 +110,7 @@ class FileTracker:
         alg_name, satellite, date_time, round_frame = shp.parse_filename()
         # print(shp.parse_filename())
         data_fires = shp.read_shape_file()
-
+        #print(data_fires)
         if data_fires:
             db.insert_data_fires(
                 date_time=date_time,

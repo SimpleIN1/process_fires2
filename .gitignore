@@ -3,7 +3,7 @@ __pycache__/
 .idea
 
 loader_data/data
-loader_data/load_poly_settlement
+loader_data/load_poly_settlement/sett*.json
 
 .env
 */trash*.txt
@@ -13,3 +13,6 @@ ftp_tracker/monitor_dir
 triggers.txt
 **/logs
 appended_module.py
+mondir/
+loader_data/load_poly_settlement/venv
+ftp_tracker/data
