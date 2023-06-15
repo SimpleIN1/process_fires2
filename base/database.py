@@ -203,16 +203,43 @@ class DataBase(FuncSqlRow):
 
         dt = self.get_or_create(model=DateTm, datetime=date_time)
         # if not dt
-        attribute_name = data_fires.fields[3][0] 
+        # attribute_name = data_fires.fields[3][0]
+        # l_s = []
         l_s = [FireValue(
-            temperature=row.record[attribute_name],#[self.fetch_key_temperature(data_fires.schema)], #['temperatur'],
-            latitude=shape(row.shape).y,
-            longitude=shape(row.shape).x,
+            # temperature=row.record[attribute_name],#[self.fetch_key_temperature(data_fires.schema)], #['temperatur'],
+            # temperature=row['properties'][self.fetch_key_temperature(data_fires.schema)], #['temperatur'],
+            temperature=row[1][2], #['temperatur'],
+            # latitude=shape(row.shape).y,
+            # latitude=shape(row['geometry']).y,
+            latitude=shape(row[1][3]).y,
+            # longitude=shape(row.shape).x,
+            # longitude=shape(row['geometry']).x,
+            longitude=shape(row[1][3]).x,
             datetime_id=dt.id,
             satellite=kwargs.get('satellite'),
             round=kwargs.get('round'),
             alg_name=kwargs.get('alg_name')
-        ) for row in data_fires]
+        ) for row in data_fires.iterrows()]
+
+        # for row in data_fires.iterrows():
+        #     l_s.append(
+        #
+        #         FireValue(
+        #                 # temperature=row.record[attribute_name],#[self.fetch_key_temperature(data_fires.schema)], #['temperatur'],
+        #                 # temperature=row['properties'][self.fetch_key_temperature(data_fires.schema)], #['temperatur'],
+        #                 temperature=row[1][2], #['temperatur'],
+        #                 # latitude=shape(row.shape).y,
+        #                 # latitude=shape(row['geometry']).y,
+        #                 latitude=shape(row[1][3]).y,
+        #                 # longitude=shape(row.shape).x,
+        #                 # longitude=shape(row['geometry']).x,
+        #                 longitude=shape(row[1][3]).x,
+        #                 datetime_id=dt.id,
+        #                 satellite=kwargs.get('satellite'),
+        #                 round=kwargs.get('round'),
+        #                 alg_name=kwargs.get('alg_name')
+        #             )
+        #     )
 
         self.insert_all(l_s)
 

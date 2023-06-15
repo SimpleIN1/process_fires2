@@ -228,8 +228,9 @@ class ProcessFirePoint:
 
     # @time_of_work_wraps
     def is_tech_zone(self, point: Point):
-        for zone in self.technogenic_zones:
+        for zone in self.technogenic_zones: #self.db.get_tech_zones():
             # print(type(zone))
+            # poly = wkb.loads(bytes(zone.poly.data))
             if zone.contains(point):
                 return True
         return False
@@ -285,8 +286,7 @@ class ProcessFirePoint:
 
         if district_id and not tech: # correct not tech
             id_min_stln, min_distance, long, lat, list_id_settlement = self.operate_distance(Point(longitude, latitude))
-            
-            
+
             if list_id_settlement != []:
                 self.db.insert_settlements(
                     id_fire_value=id_fire_value,

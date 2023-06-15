@@ -17,7 +17,8 @@ ftp_login = os.getenv('ftp_login')
 ftp_password = os.getenv('ftp_password')
 
 monitor_dir = '/home/py-user/mondir'
-    # '/home/grigoriy/PycharmProjects/UsuallyPythonProject/process_fire/monitor_dir'
+#'/home/grigoriy/process_fire/monitor_dir'
+
 
 
 name_function_insert_district = 'function_insert_district'

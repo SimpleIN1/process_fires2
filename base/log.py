@@ -24,7 +24,7 @@ def error_wraps(func):
             logger.logger.error(
                 response
             )
-
+            # print(response)
     return wrapper
 
 
