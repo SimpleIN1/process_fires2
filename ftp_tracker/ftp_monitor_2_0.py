@@ -70,6 +70,7 @@ class TrackFTP(SettingUser, File):
         self.output_dir = kwargs.get('output_dir')
         self.connect()
         self.ftp.cwd(kwargs.get('tracker_remote_dir'))
+        self.loaded_files = []
 
     def connect(self):
         connected = False
@@ -98,6 +99,7 @@ class TrackFTP(SettingUser, File):
 
     def download_file_list(self, file_list):
         download_files = []
+        self.loaded_files = []
         for file in file_list:
             filename = os.path.basename(file).split('.')[0]
             dir = os.path.dirname(file)
@@ -111,6 +113,8 @@ class TrackFTP(SettingUser, File):
             else:
                 print(file)
                 download_files.append(file)
+
+        self.loaded_files.extend(download_files)
 
         return download_files
 
@@ -133,6 +137,14 @@ class TrackFTP(SettingUser, File):
 
             if new_files:
                 yield new_files
+
+            not_loading_files = set(new_files) - set(self.loaded_files)
+
+            if not_loading_files:
+                print(f'First round, these files was loaded: {not_loading_files}')
+
+                for filename in not_loading_files:
+                    temp.remove(filename)
 
             old_files = temp
             time.sleep(8)

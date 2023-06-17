@@ -18,6 +18,7 @@ ftp_password = os.getenv('ftp_password')
 
 monitor_dir = '/home/py-user/mondir'
 #'/home/grigoriy/process_fire/monitor_dir'
+#'/home/grigoriy/proc_fire_up/process_fire/monitor_dir'
 
 
 
