@@ -107,7 +107,7 @@ class DataBase(FuncSqlRow):
         return query
 
     def get_settlements(self):
-        query = self.session.query(Settlement).all()
+        query = self.session.query(Settlement).filter(Settlement.district_id.is_not(None))#all()
         return query
 
     def get_districts(self):
@@ -126,6 +126,7 @@ class DataBase(FuncSqlRow):
             )
             self.session.commit()
         except Exception as e:
+            self.session.rollback()
             logging.error(f'insert_settlements - {e}')
             print('insert_settlements -', e)
 
@@ -145,6 +146,7 @@ class DataBase(FuncSqlRow):
             self.session.flush()
             self.session.commit()
         except Exception as e:
+            self.session.rollback()
             logging.error(e)
             print('update_fire_value -', e)
 

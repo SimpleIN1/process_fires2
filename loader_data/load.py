@@ -137,7 +137,7 @@ class LoadToDataBase:
         self.db.create_trigger_settlement_ins()
         self.db.create_function_send_notify_process()
         self.db.create_trigger_fire_value_change()
-        # self.db.create_index(FireValue.__tablename__, 'datetime_id')
+        self.db.create_index(FireValue.__tablename__, 'datetime_id')
 
     def fetch_subjects_data(self):
         out_list = []

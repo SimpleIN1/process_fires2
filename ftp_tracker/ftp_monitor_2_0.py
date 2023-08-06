@@ -103,7 +103,6 @@ class TrackFTP(SettingUser, File):
         for file in file_list:
             filename = os.path.basename(file).split('.')[0]
             dir = os.path.dirname(file)
-
             for expansion in self.__expansion_list:
                 if not self.download_file(
                     f'{self.ftp.pwd()}/{dir}/{filename}.{expansion}',
@@ -134,7 +133,6 @@ class TrackFTP(SettingUser, File):
                 temp.update(self.ftp.nlst(f'{remote_dir}/*.shp'))
 
             new_files = temp - old_files
-
             if new_files:
                 yield new_files
 

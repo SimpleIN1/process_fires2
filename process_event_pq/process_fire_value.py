@@ -1,5 +1,7 @@
 import datetime
 import functools
+import math
+import pprint
 import sys
 import time
 
@@ -51,17 +53,23 @@ class ProcessFirePoint:
         return out_list
 
     def fetch_districts_data(self):
-        out_list = []
+        # out_list = []
+        out_dict = {}
 
         for district in self.db.get_districts():
             poly = wkb.loads(bytes(district.poly.data))
-            out_list.append({
-                'id': district.id,
+            # out_list.append({
+            #     'id': district.id,
+            #     'poly': poly,
+            #     'subject_id': district.subject_id,
+            # })
+            out_dict[district.id] = {
                 'poly': poly,
                 'subject_id': district.subject_id,
-            })
+            }
+
         print('Districts is loaded..')
-        return out_list
+        return out_dict #out_list
 
     def fetch_tech_zones_data(self):
         out_list = []
@@ -172,22 +180,32 @@ class ProcessFirePoint:
         return list_poly
 
     # @time_of_work_wraps
-    def operate_distance(self, point):
+    def operate_distance(self, point, subject_id):
 
         list_poly_settlement = []
         min = sys.maxsize
         dict = None
+
+        # print('-------')
         for item in self.settlement_polygons:
-            p1, p2 = nearest_points(point, item['poly'])
-            distance = operate_distance(p1.y, p1.x, p1.y, p2.x)
+            if self.districts[item['district_id']]['subject_id'] == subject_id:
+                p1, p2 = nearest_points(point, item['poly'])
+                distance = operate_distance(p1.y, p1.x, p2.y, p2.x) # здесь ошибка была # done
+                if math.isnan(distance):
+                    distance=0
 
-            if min > distance:
-                min = distance
-                dict = item
-            if distance < 5 and item['district_id'] not in list_poly_settlement:
-                list_poly_settlement.append(item['district_id'])
+                # if self.districts[item['district_id']]['subject_id'] == subject_id:
+                if min > distance:
+                    min = distance
+                    dict = item
+                if distance < 5 and item['district_id'] not in list_poly_settlement:
+                    list_poly_settlement.append(item['district_id'])
 
-        if dict['district_id'] not in list_poly_settlement:
+        # print(distance, point)
+        # print(dict)
+
+        if dict and dict['district_id'] not in list_poly_settlement \
+                 and self.districts[dict['district_id']]['subject_id'] == subject_id:
             list_poly_settlement.append(dict['district_id'])
 
         list_settlement_id_least_5 = []
@@ -207,24 +225,32 @@ class ProcessFirePoint:
                     p = ids_settlement[key_id]['point']
 
                 if not distance == 0:
-                    distance = operate_distance(p.y, p.x, point.y, point.x)
-
+                    distance = operate_distance(p.y, p.x, point.y, point.x) # здесь тоже # done
+                # print(distance, key_id, point)
                 if min_distance_settlement > distance:
                     min_distance_settlement = distance
-                    dict_settlement['longitude'] = p.y
-                    dict_settlement['latitude'] = p.x
+                    point_settlemnt = ids_settlement[key_id]['point']
+
+                    dict_settlement['longitude'] = point_settlemnt.x # поменять
+                    dict_settlement['latitude'] = point_settlemnt.y # местами x <-> y # done
                     dict_settlement['id_settlement'] = key_id
 
                 if distance <= 5:
                     distance = None
                     list_settlement_id_least_5.append(key_id)
 
-        return \
-            dict_settlement['id_settlement'], \
-            min_distance_settlement, \
-            dict_settlement['longitude'], \
-            dict_settlement['latitude'], \
-            list_settlement_id_least_5
+        if dict_settlement:
+            dict_settlement['min_distance_settlement'] = min_distance_settlement
+            dict_settlement['list_least_5'] = list_settlement_id_least_5
+
+        # return \
+        #     dict_settlement['id_settlement'], \
+        #     min_distance_settlement, \
+        #     dict_settlement['longitude'], \
+        #     dict_settlement['latitude'], \
+        #     list_settlement_id_least_5
+        # print('-----1-------')
+        return dict_settlement
 
     # @time_of_work_wraps
     def is_tech_zone(self, point: Point):
@@ -245,15 +271,15 @@ class ProcessFirePoint:
                 break
 
         if subject_id == 0:
-            return None
+            return None, None
 
-        for district in self.districts:
-
+        for district_key in self.districts:
+            district = self.districts[district_key]
             if district['subject_id'] == subject_id:
                 if district['poly'].contains(Point(longitude, latitude)):
-                    return district['id']
+                    return district_key, subject_id
 
-        return None
+        return None, None
 
     # @time_of_work_wraps
     def calculate_directly(self, longitude, latitude, lon_point, lat_point): # work
@@ -274,7 +300,8 @@ class ProcessFirePoint:
             directly_from_stlm = 7 # Ю-B
         elif longitude < lon_point and latitude < lat_point:
             directly_from_stlm = 8 # Ю-З:
-
+        else:
+            directly_from_stlm = None
         return directly_from_stlm
 
     # @time_of_work_wraps
@@ -282,21 +309,36 @@ class ProcessFirePoint:
     def run_process(self, id_fire_value, longitude, latitude):
 
         tech = self.is_tech_zone(Point(longitude, latitude))
-        district_id = self.entry_in_district(longitude, latitude)
+        district_id, subject_id = self.entry_in_district(longitude, latitude)
 
-        if district_id and not tech: # correct not tech
-            id_min_stln, min_distance, long, lat, list_id_settlement = self.operate_distance(Point(longitude, latitude))
+        if district_id and tech == False: # correct not tech
 
-            if list_id_settlement != []:
-                self.db.insert_settlements(
-                    id_fire_value=id_fire_value,
-                    list_settlement=list_id_settlement
-                )
+            # id_min_stln, min_distance, long, lat, list_id_settlement = self.operate_distance(Point(longitude, latitude),subject_id)
 
-            directly = self.calculate_directly(longitude, latitude, long, lat)
-            self.db.update_fire_value(id_fire_value, tech, min_distance, id_min_stln, district_id, directly)
+            dict_settlement = self.operate_distance(Point(longitude, latitude),subject_id)
 
-            #print('dis')
+            # if dict_settlement:
+            id_min_stln = dict_settlement.get('id_settlement')
+            min_distance = dict_settlement.get('min_distance_settlement')
+            long = dict_settlement.get('longitude')
+            lat = dict_settlement.get('latitude')
+            list_id_settlement = dict_settlement.get('list_least_5')
+
+            if dict_settlement:
+                if len(list_id_settlement) != 0: # or list_id_settlement != []
+
+                    self.db.insert_settlements(
+                        id_fire_value=id_fire_value,
+                        list_settlement=list_id_settlement
+                    )
+
+            directly = None
+            if dict_settlement:
+                directly = self.calculate_directly(longitude, latitude, long, lat)
+                # print('directly -', directly)
+            if True:
+                self.db.update_fire_value(id_fire_value, tech, min_distance, id_min_stln, district_id, directly)
+
         else:
             self.db.update_tech_zone(id_fire_value, tech)
         self.__count+=1

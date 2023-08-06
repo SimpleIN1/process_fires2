@@ -18,3 +18,5 @@ monitor_dir/
 loader_data/load_poly_settlement/venv
 ftp_tracker/data
 **/venv
+
+test/
